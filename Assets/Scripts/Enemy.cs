@@ -48,12 +48,28 @@ public class Enemy : MonoBehaviour
         Rigidbody2D ballRb = collision.rigidbody;
         float gSign = Mathf.Sign(ballRb.gravityScale); // +1 normal, -1 when gravity is flipped
 
+        // Previous position/velocity check, kept for reference:
+        /*
         // Convert "above" and "falling" into the CURRENT gravity frame:
         float verticalOffset = (collision.transform.position.y - transform.position.y) * gSign;
         float verticalVel = ballRb.linearVelocity.y * gSign;
 
         // Stomp = ball is on the "up" side of the enemy AND moving "down" onto it
         bool stomped = verticalOffset > 0.15f && verticalVel < 0f;
+        */
+
+        // Collision resolution may already have stopped the ball's downward motion.
+        // Use the contact direction instead; gSign also supports reversed gravity.
+        bool stomped = false;
+        for (int i = 0; i < collision.contactCount; i++)
+        {
+            // In the enemy's callback, a hit on its top produces a downward normal.
+            if (collision.GetContact(i).normal.y * gSign < -0.7f)
+            {
+                stomped = true;
+                break;
+            }
+        }
 
         if (stomped)
         {
