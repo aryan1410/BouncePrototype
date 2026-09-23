@@ -33,6 +33,10 @@ public class Level3Completion : MonoBehaviour
 
     public void PlayAgain()
     {
-        SceneManager.LoadScene("Level3");
+        // Previous hard-coded replay destination, kept for reference:
+        // SceneManager.LoadScene("Level3");
+
+        // Reload the active level so replay still works after a scene rename.
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 }
