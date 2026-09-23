@@ -3,21 +3,21 @@ using UnityEngine.SceneManagement;
 
 public class Goal : MonoBehaviour
 {
-    private SpriteRenderer sr;
+    private ShapeRenderer2D shapeRenderer;
 
     void Start()
     {
-        sr = GetComponent<SpriteRenderer>();
+        shapeRenderer = GetComponent<ShapeRenderer2D>();
         // Look locked (gray) if this level requires defeating the enemy
-        if (sr != null && LevelManager.Instance != null
+        if (shapeRenderer != null && LevelManager.Instance != null
             && LevelManager.Instance.requireEnemyDefeat)
-            sr.color = Color.gray;
+            shapeRenderer.Color = Color.gray;
     }
 
     // Called by LevelManager when the enemy dies
     public void Unlock()
     {
-        if (sr != null) sr.color = Color.green;
+        if (shapeRenderer != null) shapeRenderer.Color = Color.green;
     }
 
     void OnTriggerEnter2D(Collider2D other)
