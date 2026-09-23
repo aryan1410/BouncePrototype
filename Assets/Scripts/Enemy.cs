@@ -4,20 +4,23 @@ public class Enemy : MonoBehaviour
 {
     [Header("Patrol")]
     public float moveSpeed = 2f;
-    public float edgeCheckDistance = 0.6f;  // how far below the front foot to look for ground
+    public float edgeCheckDistance = 0.6f;  // how far from the front edge to look for a surface
     public float wallCheckDistance = 0.5f;  // how far ahead to look for walls/spikes
     public LayerMask groundLayer;           // set to "Ground"
     public LayerMask hazardLayer;           // set to "Hazard"
+    public bool isCeilingWalker = false;
 
     [Header("Stomp")]
     public float ballBounceForce = 12f;     // how hard the ball bounces after a stomp
 
     private Rigidbody2D rb;
+    private Collider2D enemyCollider;
     private int dir = 1; // 1 = moving right, -1 = moving left
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        enemyCollider = GetComponent<Collider2D>();
     }
 
     void FixedUpdate()
@@ -25,11 +28,13 @@ public class Enemy : MonoBehaviour
         // Patrol horizontally
         rb.linearVelocity = new Vector2(dir * moveSpeed, 0f);
 
-        // Is there still ground ahead of my feet? (stops me falling off edges)
+        // Look down for floor walkers and up for ceiling walkers.
+        Vector2 surfaceDirection = isCeilingWalker ? Vector2.up : Vector2.down;
+        float surfaceOffset = GetSurfaceOffset();
         Vector2 frontFoot = (Vector2)transform.position
                             + Vector2.right * dir * wallCheckDistance
-                            + Vector2.down * 0.5f;
-        bool groundAhead = Physics2D.Raycast(frontFoot, Vector2.down, edgeCheckDistance, groundLayer);
+                            + surfaceDirection * surfaceOffset;
+        bool surfaceAhead = Physics2D.Raycast(frontFoot, surfaceDirection, edgeCheckDistance, groundLayer);
 
         // Is there a wall or spikes right in front of me?
         Vector2 eye = transform.position;
@@ -37,7 +42,7 @@ public class Enemy : MonoBehaviour
         bool spikeAhead = Physics2D.Raycast(eye, Vector2.right * dir, wallCheckDistance, hazardLayer);
 
         // Turn around if I'd fall, hit a wall, or hit spikes
-        if (!groundAhead || wallAhead || spikeAhead)
+        if (!surfaceAhead || wallAhead || spikeAhead)
             dir = -dir;
     }
 
@@ -89,11 +94,19 @@ public class Enemy : MonoBehaviour
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.cyan;
+        Vector2 surfaceDirection = isCeilingWalker ? Vector2.up : Vector2.down;
+        float surfaceOffset = GetSurfaceOffset();
         Vector2 frontFoot = (Vector2)transform.position
                             + Vector2.right * dir * wallCheckDistance
-                            + Vector2.down * 0.5f;
-        Gizmos.DrawLine(frontFoot, frontFoot + Vector2.down * edgeCheckDistance);
+                            + surfaceDirection * surfaceOffset;
+        Gizmos.DrawLine(frontFoot, frontFoot + surfaceDirection * edgeCheckDistance);
         Gizmos.DrawLine(transform.position,
                         (Vector2)transform.position + Vector2.right * dir * wallCheckDistance);
+    }
+
+    private float GetSurfaceOffset()
+    {
+        Collider2D collider = enemyCollider != null ? enemyCollider : GetComponent<Collider2D>();
+        return collider != null ? Mathf.Max(0f, collider.bounds.extents.y - 0.02f) : 0.5f;
     }
 }
