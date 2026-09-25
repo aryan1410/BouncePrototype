@@ -373,7 +373,6 @@ MonoBehaviour:
   player: {fileID: 100}
   spawnPoint: {fileID: 111}
   requireEnemyDefeat: 0
-  goal: {fileID: 406}
 --- !u!1 &130
 GameObject:
   m_ObjectHideFlags: 0
