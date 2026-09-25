@@ -49,7 +49,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShapeRenderer2D
   shape: 0
   color: {r: 0.9647, g: 0.8431, b: 0.2627, a: 1}
-  size: {x: 0.74, y: 0.91}
+  size: {x: 0.74, y: 0.7}
   sortingOrder: 0
 --- !u!50 &1117430007
 Rigidbody2D:
