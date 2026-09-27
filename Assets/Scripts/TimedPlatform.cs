@@ -22,6 +22,15 @@ public class TimedPlatform : MonoBehaviour
         platformCollider = GetComponent<Collider2D>();
     }
 
+    public void ResetPlatform()
+    {
+        // Cancel any pending disappearance before restoring the platform.
+        StopAllCoroutines();
+        countdownStarted = false;
+        platformRenderer.enabled = true;
+        platformCollider.enabled = true;
+    }
+
     void OnCollisionEnter2D(Collision2D collision)
     {
         if (countdownStarted || !collision.collider.CompareTag("Player"))

@@ -34,6 +34,12 @@ public class LevelManager : MonoBehaviour
         if (bc != null) bc.ResetGravity();
 
         player.transform.position = spawnPoint.position;
+
+        // Restore both vanished and blinking platforms for the next attempt.
+        foreach (TimedPlatform platform in FindObjectsByType<TimedPlatform>(FindObjectsSortMode.None))
+        {
+            platform.ResetPlatform();
+        }
     }
 
     // Called by Enemy.cs when the ball stomps it
