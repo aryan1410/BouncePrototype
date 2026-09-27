@@ -91,3 +91,56 @@ SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
 ### Scope
 - Level2 is now treated as the final scene for this popup; other scene names continue through `LoadNextLevel`.
 - No scene layout, build order, Git commits, or remote branches were changed.
+
+
+## 2026-09-26 - Restore timed platforms when the player respawns
+
+### Changed
+- Added `TimedPlatform.ResetPlatform()` to stop the platform's running coroutines, clear its countdown flag, and re-enable its sprite renderer and collider.
+- Added a reset loop to `LevelManager.RespawnPlayer()` after the player is moved to the spawn point. Every active timed platform found in the loaded scenes is reset, including platforms whose renderer and collider have already been disabled.
+- Preserved all existing code. This fix only adds code, so no old implementation needed to be removed or commented out.
+
+### Reason
+Player respawn previously reset only the player's velocity, gravity, and position. Timed platforms retained their hidden state and completed countdown flag. Cancelling the previous countdown prevents a restored platform from disappearing during the next attempt, and clearing the flag allows a fresh countdown on the next player collision.
+
+### Code locations
+| File | Old code | New code | Details |
+| --- | --- | --- | --- |
+| `Assets/Scripts/TimedPlatform.cs` | No replaced or commented-out block; existing code remains active. | Lines 25-32 | New `ResetPlatform()` method; cancellation and reset statements are on lines 28-31. |
+| `Assets/Scripts/LevelManager.cs` | Existing player respawn logic remains active on lines 28-36. | Lines 38-42 | Explanation on line 38; platform reset loop on lines 39-42. |
+
+Line numbers refer to the files immediately after this update and may shift with future edits.
+
+### Updated code
+`Assets/Scripts/TimedPlatform.cs`:
+```csharp
+public void ResetPlatform()
+{
+    // Cancel any pending disappearance before restoring the platform.
+    StopAllCoroutines();
+    countdownStarted = false;
+    platformRenderer.enabled = true;
+    platformCollider.enabled = true;
+}
+```
+
+Added after the player position reset in `LevelManager.RespawnPlayer()`:
+```csharp
+// Restore both vanished and blinking platforms for the next attempt.
+foreach (TimedPlatform platform in FindObjectsByType<TimedPlatform>(FindObjectsSortMode.None))
+{
+    platform.ResetPlatform();
+}
+```
+
+### Validation
+- Compiled all 14 gameplay scripts against Unity 6000.3.22f1 assemblies successfully, with no errors. Only the two existing CS0649 warnings for Inspector-assigned fields in `Level3Completion` were reported.
+- Verified that all scene, prefab, and associated meta files remained byte-for-byte unchanged.
+- Verified that both script edits only inserted code; all original code was preserved.
+- Unity Play Mode checks are pending: die after a platform disappears, die during its countdown or blinking phase, and step on a restored platform to confirm that a fresh countdown starts. Test multiple platforms and repeat respawns.
+
+### Scope
+- Applies to deaths that call `LevelManager.RespawnPlayer()`, including hazard and enemy deaths.
+- Preserves the current lifetime and blinking settings and existing player, coin, and enemy state behavior.
+- The existing disappearance code keeps the platform GameObject active, so it remains discoverable even when its renderer and collider are disabled. Deliberately inactive GameObjects are not activated by this fix.
+- No scene layout, prefab settings, Git commits, or remote GitHub branches were changed.
